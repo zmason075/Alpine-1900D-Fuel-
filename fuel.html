@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beech 1900D Fuel Trainer</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f5f1;--pn:#fff;--tx:#1d1d1b;--mu:#6b6a65;--bd:#d9d7cf;--dead:#b3b2ac;--ac:#139a9a;--am:#d98e04;
+--fd:#1f9d55;--pr:#e8820c;--xf:#d9453d;--ax:#2a62d6;--mo:#4b2d7f;--rt:#a06ad8;--fuel:#e3b43c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#151514;--pn:#1f1f1d;--tx:#ecebe6;--mu:#a09f98;--bd:#383835;--dead:#55554f;--mo:#9b7fe0;--ax:#5b8df0}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#151514;--pn:#1f1f1d;--tx:#ecebe6;--mu:#a09f98;--bd:#383835;--dead:#55554f;--mo:#9b7fe0;--ax:#5b8df0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+.w{max-width:1400px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:0 0 12px}
+.card{background:var(--pn);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:12px}
+h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:0 0 8px}
+/*SV*/.sv{overflow-x:auto}.sv svg{min-width:760px;width:100%;height:auto;display:block}/*SVEND*/
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:760px){.g{grid-template-columns:1fr}}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
+button,.tg{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:5px 9px;cursor:pointer}
+button:hover{border-color:var(--mu)}button.on{background:var(--tx);color:var(--bg)}
+button.lit{background:#fff;color:#111;border-color:var(--tx);box-shadow:0 0 0 2px #fff,0 0 10px 2px rgba(255,255,255,.85)}
+.lbl{color:var(--mu);font-size:12px;min-width:64px}
+.m{color:var(--mu)}
+.ins{margin:0;padding:0;list-style:none}.ins li{padding:6px 8px;border-radius:6px;margin-bottom:5px;background:var(--bg);border-left:4px solid var(--bd)}
+.ins li.w{border-left-color:#d9453d}.ins li.i{border-left-color:#2f7fd6}
+.ed{fill:none;stroke:var(--dead);stroke-width:3;opacity:.45;stroke-linejoin:round}
+.ov{fill:none;stroke-width:3;stroke-dasharray:9 9;animation:dash .7s linear infinite;stroke-linejoin:round}.ov.rv{animation-direction:reverse}
+@keyframes dash{to{stroke-dashoffset:-18}}
+@media(prefers-reduced-motion:reduce){.ov{animation:none}}
+.msg{background:var(--ac);color:#fff;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:13px}
+.lg{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;font-size:12px;color:var(--mu)}.lg i{display:inline-block;width:22px;height:5px;border-radius:2px;vertical-align:middle;margin-right:5px}
+#panels{align-items:start}.ch{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;margin:0}.tri{display:inline-block;font-size:11px;transition:transform .2s}
+.card.open .tri{transform:rotate(90deg)}.cb{display:none;margin-top:10px}.card.open .cb{display:block}.card.open .ch{margin-bottom:0}
+@media(prefers-reduced-motion:reduce){.tri{transition:none}}
+.tip{position:fixed;z-index:20;max-width:280px;display:none;pointer-events:none;background:#111;color:#f2f2f2;border:1px solid #ffb000;padding:7px 10px;border-radius:6px;font-size:12px;line-height:1.4;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+svg text{font-family:system-ui,sans-serif}[data-act],[data-tip]{cursor:pointer}
+.lv{display:grid;grid-template-columns:120px 1fr 74px;gap:8px;align-items:center;margin-bottom:6px}.lv input[type=range]{width:100%}.lv input[type=number]{width:74px;font:inherit;padding:3px 5px;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:6px}
+.stat{font-variant-numeric:tabular-nums;color:var(--mu);font-size:12px}
+/*MOB*/
+</style></head><body><div id="tip" class="tip"></div><div class="w">
+<h1>Beech 1900D Fuel Trainer</h1>
+<div class="card sv"><div id="msg" class="msg" style="display:none"></div>
+<div class="lg"><span><i style="background:var(--fd)"></i>Feed</span><span><i style="background:var(--pr)"></i>Fuel under pressure</span><span><i style="background:var(--ax)"></i>Aux fuel</span><span><i style="background:var(--xf)"></i>Cross transfer</span><span><i style="background:var(--mo)"></i>Motive flow</span><span><i style="background:var(--rt)"></i>Return</span><span><i style="background:var(--fuel)"></i>Fuel in tank</span><span><i style="background:#d4b800"></i>Fuel vent (static)</span><span><i style="background:#ff9a3c;border-radius:50%"></i>Fuel probe</span><span><i style="background:#9a9a9a"></i>Fuel sensor</span><span>Moving dashes = fuel flowing</span></div>
+<div class="row" id="sim"><button id="run">▶ Run</button><span class="lbl" style="min-width:0">Speed</span><span id="spd"></span><span class="stat" id="stat"></span></div>
+<!--VP--><svg id="svg" viewBox="0 0 1400 990" role="img" aria-label="1900D fuel system, top-down view"></svg><!--/VP--></div>
+<div class="card"><h2 class="ch" role="button" tabindex="0" aria-expanded="false"><span class="tri">▶</span>Scenarios</h2><div class="cb"><div class="row" id="sc"></div></div></div>
+<div class="card"><h2 class="ch" role="button" tabindex="0" aria-expanded="false"><span class="tri">▶</span>Fuel Levels</h2><div class="cb"><div class="row"><span class="lbl" style="min-width:0">Presets</span><button onclick="pre('full')">Full</button><button onclick="pre('half')">Half</button><button onclick="pre('low')">Low</button></div><div id="lv"></div></div></div>
+<div class="g" id="panels">
+ <div class="card"><h2 class="ch" role="button" tabindex="0" aria-expanded="false"><span class="tri">▶</span>Controls</h2><div class="cb"><div id="ct"></div></div></div>
+ <div class="card"><h2 class="ch" role="button" tabindex="0" aria-expanded="false"><span class="tri">▶</span>What this means</h2><div class="cb"><ul class="ins" id="ins"></ul></div></div>
+</div>
+<p class="m">Top-down view, nose up. The wing diagram (from your ATS poster) is the left wing, overlaid on each wing. Click any pump icon in the diagram to fail or restore it. Click an ENG box to cycle OFF, START, RUN. Click a firewall valve (FW) to close or open it. Click the aux float valve to stick it. Click an electrical bus badge in the fuselage to remove power. Fuel panel and circuit breakers (bottom, laid out like the cockpit poster): click a switch position to move it, click a breaker to pull or reset it. What each breaker does when pulled is my assumption. Engine feed path, as on the poster: collector, firewall valve, engine-driven low pressure pump, fuel/oil heat exchanger, high pressure pump, FCU, injectors. Rates that are not in your notes are my assumptions and are easy to change: aux pump 1000 lb/hr into the collector, jet pumps 1500 lb/hr each, gravity flapper valves 900 lb/hr. The total and the quantity gauge count the main and aux tanks only (4484 lb full); collector fuel is not added. Not modeled: vent and thermal expansion overflow, water drains, ferry fuel provisions, electrical detail beyond the three buses that power the pumps. Always verify against your approved flight manual.</p>
+</div>
+<script>
+const CAPM=1621,CAPA=621,CAPC=53,BURN=400,XR=480,AUXR=1000,JETR=1500,FLAPR=900,CY=380;
+const mkSide=()=>({M:CAPM,A:CAPA,C:CAPC,eng:'run',stby:0,aux:'auto',fwCmd:1,fwPos:1,fwF:0,lpF:0,hpF:0,stbyF:0,auxF:0,fwdF:0,aft1F:0,aft2F:0,flt:0,xvPos:0,xvF:0,th:0,dry:0});
+const mkCb=()=>({fw:0,sb:0,ax:0,qw:0,qi:0,pw:0});
+const mk=()=>({L:mkSide(),R:mkSide(),cb:{L:mkCb(),R:mkCb(),tr:0},xf:'OFF',qs:'MAIN',bL:1,bR:1,bC:1,run:0,spd:60,t:0});
+let S=mk(),hl='Normal Operation',LC=null,note='';
+const $=id=>document.getElementById(id),SD=['L','R'],OT={L:'R',R:'L'},NM={L:'Left',R:'Right'};
+const MX=x=>x<520?520-(520-x)*.8:520+(x-520)*.75,MD=d=>d<=40?d:d<=166?40+(d-40)*1.3:203.8+(d-166)*2.3;
+const Y=(k,d)=>CY+(k=='L'?1:-1)*MD(d);
+const P=(k,pts)=>'M'+pts.map(([x,d])=>MX(x)+','+Y(k,d)).join('L');
+const RC=(k,x0,x1,d0,d1)=>{const a=Y(k,d0),b=Y(k,d1);return{x:MX(x0),y:Math.min(a,b),w:MX(x1)-MX(x0),h:Math.abs(a-b)}};
+// ---------------- logic ----------------
+const sup=S=>S.xf=='R'?'L':S.xf=='L'?'R':null;
+function norm(S){for(const k of SD){const o=S[k];if(!(o.fwF||S.cb[k].fw))o.fwPos=o.fwCmd;if(!(o.xvF||S.cb.tr))o.xvPos=sup(S)==k?1:0}}
+function calc(S){norm(S);const c={};
+ for(const k of SD){const o=S[k],r=c[k]={};r.bus=(k=='L'?S.bL:S.bR)&&!S.cb[k].ax;
+  r.run=o.eng=='run'&&!o.hpF&&!!o.fwPos&&o.C>0.05;r.flame=o.eng=='run'&&!r.run;
+  r.burn=r.run?BURN:0;r.lp=r.run&&!o.lpF;
+  r.sbCmd=!!o.stby||sup(S)==k||o.eng=='start';
+  r.sb=r.sbCmd&&!!S.bC&&!S.cb[k].sb&&!o.stbyF&&o.C>0.05;
+  r.psi=Math.max(r.lp?45:0,r.sb&&o.fwPos?11:0);r.pLow=r.psi<10&&!S.cb[k].pw;
+  const fl=o.A>0.05||!!o.flt;
+  r.auxCmd=o.aux=='on'||(o.aux=='auto'&&fl&&!o.th);
+  r.auxRun=r.auxCmd&&!!r.bus&&!o.auxF&&!o.th&&o.A>0.05;
+  r.noAux=r.auxCmd&&!!r.bus&&!r.auxRun;
+  r.xOut=(o.xvPos&&r.sb)?XR:0;
+  r.xvFail=o.xvPos!=(sup(S)==k?1:0);r.fwFail=o.fwPos!=o.fwCmd;
+  r.qLow=o.M<324&&!S.cb[k].qw;r.cLow=o.C<CAPC-0.5&&!S.cb[k].qw;
+  r.nj=[o.fwdF,o.aft1F,o.aft2F].filter(x=>!x).length;}
+ for(const k of SD){const o=S[k],r=c[k];r.xIn=c[OT[k]].xOut;
+  const need=(CAPC-o.C>0.01)||(r.burn+r.xOut>0.001);
+  r.auxFlow=r.auxRun&&need;r.mainFlow=need&&o.M>0.05&&!r.auxFlow;
+  r.jp=!!(r.lp||((r.sb||r.xIn>0)&&o.fwPos&&o.C>0.05));r.mainRate=(r.jp?r.nj*JETR:0)+FLAPR;}
+ c.xfer=!!(S.L.xvPos||S.R.xvPos);c.xvFail=c.L.xvFail||c.R.xvFail;return c;}
+function adv(S,dt){let left=dt;while(left>1e-9){const h=Math.min(5,left);left-=h;const c=calc(S);
+ for(const k of SD){const o=S[k],r=c[k];o.C-=(r.burn+r.xOut)*h/3600;o.M=Math.min(CAPM,o.M+r.xIn*h/3600);
+  if(o.C>CAPC){o.M=Math.min(CAPM,o.M+o.C-CAPC);o.C=CAPC}if(o.C<0)o.C=0;
+  let def=CAPC-o.C;
+  if(def>0&&r.auxRun){const t=Math.min(def,o.A,AUXR*h/3600);o.A-=t;o.C+=t;def-=t}
+  if(def>0&&o.M>0){const t=Math.min(def,o.M,r.mainRate*h/3600);o.M-=t;o.C+=t}
+  if(r.auxCmd&&r.bus&&!o.auxF&&!o.th&&o.A<=0.05){o.dry+=h;if(o.dry>120)o.th=1}else if(o.A>0.05)o.dry=0;
+  if(o.M<0)o.M=0;if(o.A<0)o.A=0;}
+ S.t+=h;}}
+// ---------------- drawing ----------------
+const CF='var(--fd)',CP='var(--pr)',CX='var(--xf)',CA='var(--ax)',CM='var(--mo)',CR='var(--rt)';
+const SG=k=>k=='L'?-1:1,EO=10;
+const wv=(a,b,m,c=145)=>{const o=[];for(let i=1;i<10;i++){const t=i/10;o.push([a+(b-a)*t,c+m*Math.sin(2*Math.PI*t)])}return o};
+const sb=(a,b,d0,d1)=>{const r=[];for(let i=1;i<9;i++){const t=i/9,u=t*t*(3-2*t);r.push([a+(b-a)*t,d0+(d1-d0)*u])}return r};
+const EG=[['fa',[[601,145],[585,145],...wv(585,545,8),[545,145],[500,145]],CF],['fb',k=>{const c=145+SG(k)*EO;return [[500,145],[490,145],...wv(490,474,-5),[474,145],[450,145],...sb(450,433,145,c),[433,c],[403,c],...wv(403,390,-5,c),[390,c],[366,c],...wv(366,354,5,c),[354,c],[316,c]]},CP],['fc',k=>{const c=145+SG(k)*EO,l=145-SG(k)*EO;return [[316,c],[298,c],[282,c],...sb(282,262,c,l),[262,l],[250,l]]},CP],['ret',k=>[[335,145+SG(k)*EO-12],[335,108],[548,108],[548,192],[562,192]],CR],
+ ['mot',[[447,148],[455,182],[700,182]],CM],['mo2',[[660,182],[660,152]],CM],['mo3',[[700,182],[700,152]],CM],
+ ['ax',[[640,88],[640,128],[593,128],[593,145]],CA],['rf',[[722,192],[722,150]],CF],['xf',[[735,160],[815,160],[815,0]],CX]];
+const ic=(id,x,d,k,t,r,act,tip)=>`<g id="${id}" data-act="${act}" data-tip="${tip}"><circle cx="${x}" cy="${Y(k,d)}" r="${r}" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.5"/><text id="${id}t" x="${x}" y="${Y(k,d)+3}" text-anchor="middle" font-size="7.5" font-weight="700" fill="var(--tx)" pointer-events="none">${t}</text></g>`;
+const tx=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-size="10.5" fill="var(--mu)" ${o}>${t}</text>`;
+let h=`<defs><filter id="ga" x="-30%" y="-60%" width="160%" height="220%"><feDropShadow dx="0" dy="0" stdDeviation="2.2" flood-color="#ffb000"/></filter><filter id="gr" x="-30%" y="-60%" width="160%" height="220%"><feDropShadow dx="0" dy="0" stdDeviation="2.2" flood-color="#ff3b30"/></filter><filter id="gw" x="-30%" y="-60%" width="160%" height="220%"><feDropShadow dx="0" dy="0" stdDeviation="2.2" flood-color="#ffffff"/></filter></defs>`;
+// aircraft
+h+='<g id="ac" transform="translate(1080,-140) rotate(90)">';
+h+=`<path d="M170,380C178,352 220,340 290,340L800,340L800,420L290,420C220,420 178,408 170,380Z" fill="var(--pn)"/><path d="M800,340L290,340C220,340 178,352 170,380C178,408 220,420 290,420L800,420" fill="none" stroke="var(--mu)" stroke-width="2"/><path d="M800,340V420" stroke="var(--mu)" stroke-width="2" stroke-dasharray="4 4"/>`;
+h+=tx(240,388,'COCKPIT','fill="var(--dead)" font-size="10"');
+for(const k of SD){
+ h+=`<path d="${P(k,[[520,40],[830,40],[818,190],[735,322],[615,322],[538,190]])}Z" fill="var(--pn)" stroke="var(--mu)" stroke-width="2"/>`;
+ let n=RC(k,233,530,87,187);h+=`<rect data-m="1" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="18" fill="var(--pn)" stroke="var(--mu)" stroke-width="2"/>`;
+ h+=`<path d="M${MX(216)},${Y(k,80)}V${Y(k,190)}" stroke="var(--mu)" stroke-width="5" stroke-linecap="round"/><circle cx="226" cy="${Y(k,145)}" r="8" fill="var(--mu)"/>`;
+ // tanks
+ const MT=[[560,166],[790,166],[790,190],[733,310],[617,310],[560,190]];
+ for(const [t,x0,x1,d0,d1] of [['M',560,790,166,310],['C',585,735,122,166],['A',560,790,45,122]]){const q=RC(k,x0,x1,d0,d1);
+  const sty='fill="var(--bg)" stroke="var(--ac)" stroke-width="1.5" stroke-dasharray="5 3"';
+  h+=(t=='M'?`<clipPath id="cp_${k}"><path d="${P(k,MT)}Z"/></clipPath><path data-m="1" d="${P(k,MT)}Z" ${sty}/>`:`<rect data-m="1" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}" ${sty}/>`)+`<rect data-m="1" id="fl_${k}${t}" x="${q.x}" y="${q.y}" width="${q.w}" height="0" fill="var(--fuel)" opacity=".5"${t=='M'?` clip-path="url(#cp_${k})"`:''}/>`;}
+ {const w=Y(k,166);h+=`<line x1="585" y1="${w}" x2="735" y2="${w}" stroke="var(--ac)" stroke-width="2.5"/>`;
+  for(const x of [612,672,722])h+=`<line x1="${x}" y1="${w}" x2="${x+12}" y2="${w}" stroke="var(--bg)" stroke-width="4"/>`;
+  for(const x of [598,650,700])h+=`<rect x="${x}" y="${w-2}" width="9" height="4" rx="1" fill="var(--fd)" stroke="var(--tx)" stroke-width=".8"/>`;
+  h+=`<rect data-m="1" x="${MX(585)}" y="${w-5}" width="${MX(735)-MX(585)}" height="10" fill="transparent" data-tip="w:${k}"/>`;}
+ // edges
+ for(const [nm,pts,col] of EG){const d=P(k,typeof pts=='function'?pts(k):pts);h+=`<path class="ed" id="e_${k}${nm}" d="${d}"/><path class="ov" id="o_${k}${nm}" d="${d}" style="display:none"/>`;}
+ // vents + labels
+ {const V=pts=>P(k,pts),vd=V([[690,200],[690,306]])+V([[650,200],[650,306]])+V([[636,306],[726,306]])+V([[636,306],[636,314]])+V([[666,306],[666,314]])+V([[696,306],[696,314]])+V([[726,318],[726,285]]);
+ h+=`<path d="${vd}" stroke="#7a6a00" stroke-width="5" fill="none" stroke-linecap="round" pointer-events="none"/><path d="${vd}" stroke="#f2d200" stroke-width="2.6" fill="none" stroke-linecap="round" pointer-events="none"/>`;
+ const sy=`fill="#f2d200" stroke="#7a6a00" stroke-width="1.2"`,fs=`fill="#fff6b0" stroke="#7a6a00" stroke-width="1.2"`;
+ h+=`<circle cx="690" cy="${Y(k,200)}" r="3" ${sy} pointer-events="none"/><circle cx="650" cy="${Y(k,200)}" r="3" ${sy} pointer-events="none"/>`;
+ h+=`<rect x="646" y="${Y(k,296)-4}" width="8" height="8" ${fs} data-tip="vt:fv"/>`;
+ h+=`<circle cx="636" cy="${Y(k,318)}" r="4.5" ${sy} data-tip="vt:naca"/><rect x="662" y="${Y(k,318)-3.5}" width="8" height="7" fill="#ff9a3c" stroke="#7a6a00" stroke-width="1.2" data-tip="vt:ram"/><rect x="692" y="${Y(k,318)-3.5}" width="8" height="7" ${fs} data-tip="vt:flush"/><circle cx="726" cy="${Y(k,318)}" r="2.6" fill="#fff" stroke="#7a6a00" stroke-width="1.2" data-tip="vt:relief"/><circle cx="726" cy="${Y(k,285)}" r="3" fill="#fff" stroke="#7a6a00" stroke-width="1.2" data-tip="vt:relief"/>`;
+ h+=`<circle cx="612" cy="${Y(k,255)}" r="5.5" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.5" data-tip="vt:mfill"/><circle cx="612" cy="${Y(k,255)}" r="2" fill="var(--tx)" pointer-events="none"/><circle cx="574" cy="${Y(k,112)}" r="5.5" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.5" data-tip="vt:afill"/><circle cx="574" cy="${Y(k,112)}" r="2" fill="var(--tx)" pointer-events="none"/>`;
+ for(const [px,pd] of [[612,215],[742,215],[628,255],[700,246],[670,296]])h+=`<circle cx="${px}" cy="${Y(k,pd)}" r="3" fill="#ff9a3c" stroke="#8a4a00" stroke-width="1" data-tip="vt:probe"/>`;
+ h+=`<rect x="676" y="${Y(k,160)-4}" width="8" height="8" fill="#9a9a9a" stroke="#4a4a4a" stroke-width="1.2" data-tip="vt:cprobe"/><rect x="583" y="${Y(k,166)-4}" width="8" height="8" fill="#9a9a9a" stroke="#4a4a4a" stroke-width="1.2" data-tip="vt:msens"/>`;}
+ h+=tx(520,Y(k,k=='L'?339:337),NM[k].toUpperCase()+' WING','font-weight="700" fill="var(--tx)" font-size="10"');
+ h+=`<text id="tM_${k}" x="675" y="${Y(k,235)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--tx)"></text><text id="tA_${k}" x="742" y="${Y(k,70)}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--tx)"></text>`;
+ h+=`<text id="tCl_${k}" x="768" y="${Y(k,133)}" text-anchor="middle" font-size="8" fill="var(--mu)">COLLECTOR</text><text id="tC_${k}" x="768" y="${Y(k,145)}" text-anchor="middle" font-size="9" font-weight="700" fill="var(--tx)"></text>`;
+ // level indicators 745 / 1150
+ for(const [lb,txt] of [[745,'745'],[1150,'1150']]){const d=166+144*lb/CAPM,cx=Math.round((d<=190?790:790-(d-190)*.475)-25);h+=`<circle id="li${lb}_${k}" cx="${cx}" cy="${Y(k,d)}" r="4" fill="var(--tx)"/><text x="${cx-7}" y="${Y(k,d)+3}" text-anchor="end" font-size="8" fill="var(--mu)">${txt}</text>`;}
+ // engine line components
+ const cR=145+SG(k)*EO,cL=145-SG(k)*EO;
+ h+=`<g data-act="fw:${k}" data-tip="v:${k}"><polygon id="fwv_${k}" points="${[[490,0],[500,-10],[510,0],[500,10]].map(([a,b])=>a+','+(Y(k,145)+b)).join(' ')}" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.5"/><text x="500" y="${Y(k,145)+3}" text-anchor="middle" font-size="7" font-weight="700" fill="var(--tx)" pointer-events="none">FW</text></g>`;
+ 
+ h+=`<circle cx="451" cy="${Y(k,164)}" r="6" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.2" data-tip="ps:${k}"/>`+tx(436,Y(k,k=='L'?127:121),'10 PSI SW','text-anchor="middle" font-size="7"');
+ h+=ic(`p_${k}lp`,462,145,k,'LP',10,`tg:${k}:lpF`,`p:${k}:lp`)+ic(`p_${k}hp`,378,cR,k,'HP',10,`tg:${k}:hpF`,`p:${k}:hp`);
+ h+=`<rect x="403" y="${Y(k,cR)-9}" width="30" height="18" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.2"/><text x="418" y="${Y(k,cR)+3}" text-anchor="middle" font-size="7" fill="var(--tx)" pointer-events="none">HX</text>`;
+ h+=`<rect x="316" y="${Y(k,cR)-12}" width="38" height="24" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.5"/><text x="335" y="${Y(k,cR)+3}" text-anchor="middle" font-size="8" font-weight="700" fill="var(--tx)" pointer-events="none">FCU</text><circle cx="250" cy="${Y(k,cL)}" r="12" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.5"/><text x="250" y="${Y(k,cL)+3}" text-anchor="middle" font-size="7" fill="var(--tx)" pointer-events="none">INJ</text>`;
+ h+=`<g data-tip="pv:${k}"><rect id="pv_${k}" x="282" y="${Y(k,cR)-8}" width="16" height="16" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.5"/><text x="290" y="${Y(k,cR)+3}" text-anchor="middle" font-size="6.5" font-weight="700" fill="var(--tx)" pointer-events="none">100</text></g>`+tx(290,Y(k,k=='L'?168:162),'100 PSI MIN','text-anchor="middle" font-size="6.5"');
+ const dd=k=='L'?168:162;
+ for(const [x,t] of [[462,'LP 45 PSI'],[378,'HP 850 PSI'],[514,'FW VALVE']])h+=tx(x,Y(k,dd),t,'text-anchor="middle" font-size="7"');
+ // pumps in wing
+ h+=ic(`p_${k}sb`,610,145,k,'SB',9,`tg:${k}:stbyF`,`p:${k}:sb`)+ic(`p_${k}a1`,660,145,k,'AJ',8,`tg:${k}:aft1F`,`p:${k}:aj1`)+ic(`p_${k}a2`,700,145,k,'AJ',8,`tg:${k}:aft2F`,`p:${k}:aj2`)+ic(`p_${k}fj`,600,182,k,'FJ',8,`tg:${k}:fwdF`,`p:${k}:fj`);
+ h+=ic(`p_${k}ax`,640,88,k,'AX',10,`tg:${k}:auxF`,`p:${k}:ax`);
+ h+=`<rect id="s5_${k}" x="634" y="${Y(k,108)-5}" width="12" height="10" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.2" data-tip="s5:${k}"/>`+tx(654,Y(k,111),'5 PSI SW','font-size="7"');
+ h+=`<g data-act="tg:${k}:flt" data-tip="f:${k}"><rect id="flt_${k}" x="572" y="${Y(k,60)-6}" width="16" height="12" rx="2" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.5"/><text x="580" y="${Y(k,60)+3}" text-anchor="middle" font-size="7" font-weight="700" fill="var(--tx)" pointer-events="none">FLT</text></g>`;
+ h+=`<g data-act="tg:${k}:xvF" data-tip="x:${k}"><polygon id="xv_${k}" points="${[[805,0],[815,-10],[825,0],[815,10]].map(([a,b])=>a+','+(Y(k,100)+b)).join(' ')}" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.5"/><text x="815" y="${Y(k,100)+3}" text-anchor="middle" font-size="7" font-weight="700" fill="var(--tx)" pointer-events="none">XV</text></g>`;
+ // engine box
+ const ey=Y(k,216);
+ h+=`<g data-act="eng:${k}" data-tip="eng:${k}"><rect id="eb_${k}" x="275" y="${ey-11}" width="120" height="22" rx="5" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.5"/><text id="et_${k}" x="335" y="${ey+4}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--tx)" pointer-events="none"></text></g>`;
+}
+h+=tx(826,372,'CROSS TRANSFER','font-size="7" fill="var(--xf)"');
+// electrical supply badges
+for(const [id,x,t] of [['bL',548,'L GEN BUS'],['bC',628,'CTR BUS'],['bR',708,'R GEN BUS']])h+=`<g data-act="bus:${id}" data-tip="b:${id}"><rect id="bg_${id}" x="${x}" y="368" width="72" height="24" rx="4" fill="var(--pn)" stroke="var(--tx)" stroke-width="1.5"/><text id="bgt_${id}" x="${x+36}" y="384" text-anchor="middle" font-size="9" font-weight="700" fill="var(--tx)" pointer-events="none">${t}</text></g>`;
+h+='</g><g id="act" pointer-events="none"></g>';
+// annunciators
+const AN=[['pLow','FUEL PRESS LOW','r'],['qLow','FUEL QTY LOW','a'],['cLow','COL TANK LOW','a'],['noAux','NO AUX XFR','a'],['fwFail','FW VALVE','a']];
+const AX0=712,AW=133.92,AY=710,AH=38,AP=42;
+AN.forEach(([key,t,c],i)=>SD.forEach((k,j)=>{if(key=='fwFail'){const X=AX0+i*AW,Yy=AY+j*AP,W=AW-4;h+=`<g data-act="fw:${k}" data-tip="a:${k}:${key}" style="cursor:pointer"><rect x="${X}" y="${Yy}" width="${W}" height="${AH}" rx="3" fill="#d9d9d9" stroke="#8c8c8c"/><rect id="anl_${k}" x="${X}" y="${Yy+1}" width="4" height="${AH-2}" rx="2" fill="#ff3b30" opacity="0"/><rect id="anr_${k}" x="${X+W-4}" y="${Yy+1}" width="4" height="${AH-2}" rx="2" fill="#ff3b30" opacity="0"/><text id="an_${k}${key}" x="${X+W/2}" y="${Yy+24}" text-anchor="middle" font-size="12" font-weight="700" fill="#111" pointer-events="none">${k} ${t}</text></g>`;return}h+=`<g data-tip="a:${k}:${key}"><rect x="${AX0+i*AW}" y="${AY+j*AP}" width="${AW-4}" height="${AH}" rx="3" fill="#141414" stroke="#2c2c2c"/><text id="an_${k}${key}" x="${AX0+i*AW+(AW-4)/2}" y="${AY+j*AP+24}" text-anchor="middle" font-size="12" font-weight="700" fill="#6e6e6e">${k} ${t}</text></g>`}));
+[['xfer','FUEL TRANSFER','w'],['xvF','XFER VALVE FAIL','a']].forEach(([key,t],i)=>{h+=`<g data-tip="a:X:${key}"><rect x="${AX0+(1.5+i)*AW}" y="${AY+2*AP}" width="${AW-4}" height="${AH}" rx="3" fill="#141414" stroke="#2c2c2c"/><text id="an_X${key}" x="${AX0+(1.5+i)*AW+(AW-4)/2}" y="${AY+2*AP+24}" text-anchor="middle" font-size="12" font-weight="700" fill="#6e6e6e">${t}</text></g>`});
+// switch panel
+const SWD=[
+ {id:'sL',pos:['ON','OFF'],get:()=>S.L.stby?0:1,set:i=>{S.L.stby=i==0?1:0}},
+ {id:'aL',pos:['ON','AUTO','OFF'],get:()=>['on','auto','off'].indexOf(S.L.aux),set:i=>{S.L.aux=['on','auto','off'][i];if(i==2){S.L.th=0;S.L.dry=0}}},
+ {id:'xf',pos:['L','OFF','R'],get:()=>['L','OFF','R'].indexOf(S.xf),set:i=>{S.xf=['L','OFF','R'][i]}},
+ {id:'qs',pos:['MAIN','AUX'],get:()=>S.qs=='MAIN'?0:1,set:i=>{S.qs=i?'AUX':'MAIN'}},
+ {id:'aR',pos:['ON','AUTO','OFF'],get:()=>['on','auto','off'].indexOf(S.R.aux),set:i=>{S.R.aux=['on','auto','off'][i];if(i==2){S.R.th=0;S.R.dry=0}}},
+ {id:'sR',pos:['ON','OFF'],get:()=>S.R.stby?0:1,set:i=>{S.R.stby=i==0?1:0}}];
+const SWP={sL:{x:143,y:255},aL:{x:143,y:395},xf:{x:630,y:252},qs:{x:1117,y:524},aR:{x:1117,y:395},sR:{x:1117,y:255}};
+const V2=[[0,-30],[0,32]],V3=[[0,-30],[0,-3],[0,32]];
+const TIP={sL:V2,aL:V3,xf:[[-26,18],[0,32],[26,18]],qs:[[0,-27],[0,30]],aR:V3,sR:V2};
+const GX={L:365,R:897};
+const CBN={fw:['Fire wall valve','the firewall valve cannot move (it stays where it is)'],sb:['Standby pump','the standby pump has no power'],ax:['Aux tank pump','the aux tank pump has no power'],qw:['Quantity warning','FUEL QTY LOW and COL TANK LOW cannot light'],qi:['Quantity indicator','the quantity gauge reads zero'],pw:['Pressure warning','FUEL PRESS LOW cannot light'],tr:['Transfer','the transfer valves cannot move']};
+const wt=(x,y,t,sz=14,o='')=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="${sz}" fill="#e9e9e9" pointer-events="none" ${o}>${t}</text>`;
+h+=`<g transform="translate(10,710) scale(.6) translate(-52,-160)"><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e9e9e9"/></marker>`;
+h+=`<rect x="52" y="160" width="1153" height="438" rx="14" fill="#23282d" stroke="#6b6b6b" stroke-width="3"/>`;
+for(const k of SD){const cx=GX[k];
+ h+=`<clipPath id="cp${k}"><rect x="${cx-190}" y="225" width="380" height="303"/></clipPath><g clip-path="url(#cp${k})"><circle cx="${cx}" cy="415" r="183" fill="#0d0d0d"/><circle cx="${cx}" cy="415" r="150" fill="#3b3836"/></g>`;
+ for(let v=0;v<=20;v++){const a=(207-11.2*v)*Math.PI/180,mj=v%2==0,r1=mj?100:110;
+  h+=`<line x1="${cx+r1*Math.cos(a)}" y1="${415-r1*Math.sin(a)}" x2="${cx+126*Math.cos(a)}" y2="${415-126*Math.sin(a)}" stroke="#f0f0f0" stroke-width="${mj?4:2.5}"/>`;
+  if(mj)h+=wt(cx+90*Math.cos(a),415-90*Math.sin(a)+7,v,19);}
+ let pts=[];for(let v=0;v<=3.63;v+=.3){const a=(207-11.2*v)*Math.PI/180;pts.push((cx+134*Math.cos(a))+','+(415-134*Math.sin(a)))}
+ {const a=(207-11.2*3.63)*Math.PI/180;pts.push((cx+134*Math.cos(a))+','+(415-134*Math.sin(a)))}
+ h+=`<polyline points="${pts.join(' ')}" stroke="#f2b300" stroke-width="7" fill="none"/>`;
+ h+=wt(cx,378,'FUEL',24)+`<circle cx="${cx}" cy="415" r="30" fill="#0d0d0d" stroke="#777" stroke-width="3"/><line id="nd_${k}" x1="${cx}" y1="415" x2="${cx}" y2="415" stroke="#fff" stroke-width="10" stroke-linecap="round"/><circle cx="${cx}" cy="415" r="8" fill="#0d0d0d"/>`;
+ h+=`<text id="gr_${k}" x="${cx}" y="466" text-anchor="middle" font-size="15" font-family="ui-monospace,monospace" fill="#ffb000" pointer-events="none"></text>`+wt(cx,500,'QUANTITY',17)+wt(cx,516,'LBS X 100',10);
+ h+=`<circle cx="${cx}" cy="415" r="150" fill="transparent" data-tip="g:${k}"/>`;
+ h+=wt(cx,191,NM[k].toUpperCase()+' ENGINE',15)+`<path d="M${cx},232V203" stroke="#e9e9e9" stroke-width="2.5" fill="none" marker-end="url(#ah)"/>`;
+ const ux=k=='L'?262:720;h+=`<text x="${ux}" y="552" font-size="17" fill="#e9e9e9" pointer-events="none">USABLE FUEL ${NM[k].toUpperCase()} MAIN 1621 LBS</text><text x="${ux}" y="570" font-size="17" fill="#e9e9e9" pointer-events="none">AUX 621 LBS</text><text x="${ux+160}" y="570" font-size="17" fill="#e9e9e9" pointer-events="none">SEE MANUAL</text>`;}
+for(const [x,ax] of [[143,95],[1113,1163]]){h+=wt(x,199,'STANDBY PUMP')+wt(x,213,'ON')+wt(x,311,'OFF')+wt(x,331,'AUX PUMP')+wt(x,347,'ON')+wt(x,445,'OFF');['A','U','T','O'].forEach((c,i)=>h+=wt(ax,372+i*15,c));}
+h+=wt(1111,472,'FUEL QTY')+wt(1111,488,'MAIN')+wt(1111,573,'AUX');
+h+=wt(630,192,'TRANSFER')+wt(630,207,'FLOW')+wt(630,302,'OFF')+`<path d="M597,251H540L505,277" stroke="#e9e9e9" stroke-width="2.5" fill="none" marker-end="url(#ah)"/><path d="M663,251H720L755,277" stroke="#e9e9e9" stroke-width="2.5" fill="none" marker-end="url(#ah)"/>`;
+for(const s of SWD){const q=SWP[s.id],n=s.pos.length;
+ h+=`<circle cx="${q.x}" cy="${q.y}" r="31" fill="${s.id=='qs'?'#d9825f':'#c9c9c9'}" stroke="#777" stroke-width="3"/><circle cx="${q.x}" cy="${q.y}" r="21" fill="#8c8c8c" stroke="#666" stroke-width="2"/>`;
+ h+=`<line id="lv_${s.id}" x1="${q.x}" y1="${q.y}" x2="${q.x}" y2="${q.y}" stroke="#ececec" stroke-width="13" stroke-linecap="round"/><circle id="lk_${s.id}" cx="${q.x}" cy="${q.y}" r="9" fill="#fafafa" stroke="#888" stroke-width="2"/>`;
+ for(let i=0;i<n;i++){if(s.id=='xf'){const w=124/n;h+=`<rect x="${q.x-62+i*w}" y="${q.y-36}" width="${w}" height="88" fill="transparent" data-act="sw:xf:${i}" data-tip="sw:xf"/>`}
+  else{const hh=96/n;h+=`<rect x="${q.x-36}" y="${q.y-46+i*hh}" width="72" height="${hh}" fill="transparent" data-act="sw:${s.id}:${i}" data-tip="sw:${s.id}"/>`}}}
+h+=`</g>`;
+// circuit breaker strip
+h+=`<g transform="translate(712,840) scale(.64) translate(-107,-658)"><rect x="107" y="658" width="1040" height="207" rx="14" fill="#23282d" stroke="#6b6b6b" stroke-width="3"/><path d="M150,718H1105M150,827H425M470,827H578L604,800M652,800L678,827H775M820,827H1105" stroke="#e9e9e9" stroke-width="2.5" fill="none"/>`+wt(447,832,'LEFT',16)+wt(798,832,'RIGHT',16)+wt(628,793,'TRANS',16);
+const CBL=[[187,'L','fw',['FIRE','WALL','VALVE'],5],[260,'L','sb',['STBY','PUMP'],15],[333,'L','ax',['AUX','TANK','PUMP'],5],[407,'L','qw',['QTY','WARN'],5],[481,'L','qi',['QTY','IND'],5],[556,'L','pw',['PRESS','WARN'],5],[628,'X','tr',[],5],[704,'R','pw',['PRESS','WARN'],5],[778,'R','qi',['QTY','IND'],5],[853,'R','qw',['QTY','WARN'],5],[925,'R','ax',['AUX','TANK','PUMP'],5],[997,'R','sb',['STBY','PUMP'],15],[1065,'R','fw',['FIRE','WALL','VALVE'],5]];
+for(const [x,k,key,lab,n] of CBL){h+=`<g data-act="cb:${k}:${key}" data-tip="cb:${k}:${key}"><circle id="cb_${k}${key}" cx="${x}" cy="750" r="21" fill="#101010" stroke="#999" stroke-width="3"/><text id="cbt_${k}${key}" x="${x}" y="757" text-anchor="middle" font-size="20" fill="#eee" pointer-events="none">${n}</text></g>`;lab.forEach((t,i)=>h+=wt(x,792+i*14,t,14));}
+h+=`</g>`;
+$('svg').innerHTML=h;
+(function(){const ac=$('ac');
+ ac.querySelectorAll('circle,rect,line,polygon,text').forEach(e=>{const tg=e.tagName,g=n=>+e.getAttribute(n);
+  if(e.hasAttribute('data-m')||(e.id&&e.id.startsWith('fl_')))return;
+  if(tg=='circle')e.setAttribute('cx',MX(g('cx')));
+  else if(tg=='line'){e.setAttribute('x1',MX(g('x1')));e.setAttribute('x2',MX(g('x2')));}
+  else if(tg=='rect'){const c=g('x')+g('width')/2;e.setAttribute('x',g('x')+MX(c)-c);}
+  else if(tg=='text')e.setAttribute('x',MX(g('x')));
+  else if(tg=='polygon'){const pts=e.getAttribute('points').trim().split(/\s+/).map(p=>p.split(',').map(Number)),xs=pts.map(p=>p[0]),c=(Math.min(...xs)+Math.max(...xs))/2,sh=MX(c)-c;e.setAttribute('points',pts.map(p=>(p[0]+sh)+','+p[1]).join(' '));}});
+ (function(){const ac=$('ac'),ov=$('act'),TX=1080,TY=-140,ts=[...ac.querySelectorAll('text')];
+ ts.forEach(t=>{const x=+t.getAttribute('x'),y=+t.getAttribute('y'),ctr=t.getAttribute('pointer-events')=='none'&&t.getAttribute('text-anchor')=='middle';
+  t.setAttribute('x',TX-(ctr?y-3.5:y));t.setAttribute('y',TY+x);if(ctr)t.setAttribute('dominant-baseline','central');ov.appendChild(t);});
+ ac.querySelectorAll('rect').forEach(r=>{if(/^(eb_|bg_|flt_)/.test(r.id)){const cx=+r.getAttribute('x')+r.getAttribute('width')/2,cy=+r.getAttribute('y')+r.getAttribute('height')/2;r.setAttribute('transform',`rotate(-90 ${cx} ${cy})`)}});
+ const OUTL=['LP 45 PSI','HP 850 PSI','FW VALVE','100 PSI MIN','10 PSI SW'];
+ ov.querySelectorAll('text').forEach(t=>{const R=+t.getAttribute('x')>700,tc=t.textContent;
+  if(OUTL.includes(tc)){t.setAttribute('x',R?958:442);t.setAttribute('text-anchor',R?'start':'end');t.setAttribute('dominant-baseline','central');}
+  if(tc=='5 PSI SW'||tc=='CROSS TRANSFER'||tc=='COCKPIT')t.style.fontSize='9px';
+  if(tc=='5 PSI SW'){t.setAttribute('x',R?828:572);t.setAttribute('y',458);t.setAttribute('text-anchor','middle');}
+  if(tc=='CROSS TRANSFER'){t.setAttribute('x',700);t.setAttribute('y',583);t.setAttribute('text-anchor','middle');}});
+ {const T={'LP 45 PSI':[462,k=>145,10],'HP 850 PSI':[378,k=>145+SG(k)*EO,10],'FW VALVE':[500,k=>145,10],'100 PSI MIN':[290,k=>145+SG(k)*EO,8],'10 PSI SW':[451,k=>164,6]};
+ ov.insertAdjacentHTML('beforeend','<marker id="ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--tx)"/></marker>');
+ let ar='';const L=(x1,y,x2)=>`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="var(--tx)" stroke-width="1" marker-end="url(#ak)"/>`;
+ ov.querySelectorAll('text').forEach(t=>{const e=T[t.textContent];if(!e||t.id)return;const R=+t.getAttribute('x')>700,k=R?'R':'L',cx=TX-Y(k,e[1](k)),cy=TY+MX(e[0]),y=+t.getAttribute('y');
+  ar+=`<line x1="${R?954:446}" y1="${y}" x2="${cx+(R?1:-1)*(e[2]+4)}" y2="${cy}" stroke="var(--tx)" stroke-width="1" marker-end="url(#ak)"/>`;});
+ const C=[[['NACA SCOOP'],589,455,636,318,5.5,'o'],[['HEATED RAM VENT'],589,487,666,318,5,'o'],[['FLUSH VENT W/','FLAME ARRESTOR'],589,519,696,318,5,'o'],[['PRESSURE','RELIEF TUBE'],589,551,726,318,3.5,'o'],[['VENT FLOAT VALVE'],589,420,650,296,5,'o'],[['MAIN TANK','FILLER PORT'],430,350,612,255,5.5,'d'],[['AUX TANK','FILLER PORT'],134,655,574,112,5.5,'u'],[['MAIN TANK','FUEL PROBES'],430,655,700,246,3.5,'u'],[['COLLECTOR','FUEL SENSOR'],215,692,680,160,5,'u'],[['MAIN TANK','FUEL SENSOR'],300,655,587,166,5,'u']];
+ for(const k of SD){const s=k=='R'?1:-1;for(const [ln,lx,ly,xc,d,r,m] of C){const X=700+s*lx,gx=700+s*MD(d),gy=TY+MX(xc);let sx,sy,anc;
+  if(m=='o'){anc=s>0?'start':'end';sx=700+s*(lx-5);sy=ly}else{anc='middle';sx=X;sy=m=='d'?ly+ln.length*6+4:ly-ln.length*6-4}
+  ln.forEach((t,i)=>{ar+=`<text x="${X}" y="${ly+(i-(ln.length-1)/2)*12}" text-anchor="${anc}" dominant-baseline="central" font-size="10.5" fill="var(--mu)">${t}</text>`});
+  const dx=sx-gx,dy=sy-gy,Ln=Math.hypot(dx,dy);ar+=`<line x1="${sx}" y1="${sy}" x2="${gx+dx/Ln*(r+3)}" y2="${gy+dy/Ln*(r+3)}" stroke="var(--tx)" stroke-width="1" marker-end="url(#ak)"/>`;}}
+ ov.insertAdjacentHTML('beforeend',ar);}
+ for(const k of SD){const a=$('tCl_'+k),b=$('tC_'+k),m=(+a.getAttribute('x')+ +b.getAttribute('x'))/2;a.setAttribute('x',m);b.setAttribute('x',m);a.setAttribute('y',+a.getAttribute('y')-6);b.setAttribute('y',+b.getAttribute('y')+6);}})();})();
+// ---------------- render ----------------
+const ft=n=>Math.round(n);
+function ed(id,st,col,rv){const b=$('e_'+id),o=$('o_'+id);if(!b)return;
+ if(!st){b.style.stroke='var(--dead)';b.style.opacity=.45;o.style.display='none'}
+ else{b.style.stroke=col;b.style.opacity=.45;if(st==2){o.style.display='';o.style.stroke=col;o.classList.toggle('rv',!!rv)}else o.style.display='none'}}
+function pump(id,state,col,failed,dead){const g=$(id).querySelector('circle');g.style.fill=failed?'#d9453d':state?col:'var(--pn)';g.style.stroke=dead?'var(--dead)':'var(--tx)';g.style.strokeDasharray=dead?'3 2':'';$(id+'t').style.fill=failed||state?'#fff':'var(--tx)';}
+function fillTank(k,t,v,cap,x0,x1,d0,d1){const e=$('fl_'+k+t),f=Math.max(0,Math.min(1,v/cap)),q=RC(k,x0,x1,d0,d0+f*(d1-d0));e.setAttribute('y',q.y);e.setAttribute('height',q.h);e.setAttribute('width',q.w);}
+function render(){const c=LC=calc(S);
+ for(const k of SD){const o=S[k],r=c[k];
+  fillTank(k,'M',o.M,CAPM,560,790,166,310);fillTank(k,'C',o.C,CAPC,585,735,122,166);fillTank(k,'A',o.A,CAPA,560,790,45,122);
+  $('tM_'+k).textContent='MAIN '+ft(o.M)+' lb';$('tA_'+k).textContent='AUX '+ft(o.A)+' lb';$('tC_'+k).textContent=ft(o.C)+' lb';
+  $('li745_'+k).style.fill=o.M<745?'#d9453d':'var(--tx)';$('li1150_'+k).style.fill=o.M<1150?'#d9453d':'var(--tx)';
+  const cir=r.run||(o.fwPos&&o.C>0.05&&((r.sb&&(o.stby||o.eng=='start'))||r.xIn>0)),st=cir?2:(r.psi>0&&o.C>0.05?1:0);
+  ed(k+'fa',st,CF);ed(k+'fb',cir?2:(r.psi>0&&o.fwPos&&o.C>0.05?1:0),CP);ed(k+'fc',r.run?2:0,CP);ed(k+'ret',cir?2:0,CR);$('pv_'+k).style.fill=r.run?'var(--fd)':'var(--pn)';
+  const mo=r.jp?2:0;ed(k+'mot',mo,CM);ed(k+'mo2',mo,CM);ed(k+'mo3',mo,CM);
+  ed(k+'ax',r.auxFlow?2:(r.auxRun?1:0),CA);$('s5_'+k).style.fill=(o.auxF||r.noAux)?'#d9453d':'var(--pn)';ed(k+'rf',r.mainFlow?2:0,CF);
+  const xo=r.xOut>0,xi=r.xIn>0;ed(k+'xf',xo||xi?2:(o.xvPos?1:0),CX,xi&&!xo);
+  pump(`p_${k}lp`,r.lp,CP,o.lpF);pump(`p_${k}hp`,r.run,CP,o.hpF);pump(`p_${k}sb`,r.sb,CF,o.stbyF,!S.bC);
+  pump(`p_${k}ax`,r.auxRun,CA,o.auxF,!r.bus);
+  const jr=r.jp;pump(`p_${k}fj`,jr,CM,o.fwdF);pump(`p_${k}a1`,jr,CM,o.aft1F);pump(`p_${k}a2`,jr,CM,o.aft2F);
+  $('fwv_'+k).style.fill=o.fwPos?'var(--fd)':'#d9453d';$('xv_'+k).style.fill=o.xvPos?'var(--xf)':'var(--pn)';
+  $('flt_'+k).style.fill=o.flt?'#d9453d':'var(--pn)';
+  const et=$('et_'+k);et.textContent=r.flame?k+' ENG: FLAMEOUT':k+' ENG: '+o.eng.toUpperCase();et.style.fill=r.flame?'#d9453d':'var(--tx)';
+  {const val=S.cb[k].qi?0:(S.qs=='MAIN'?o.M:o.A),a=(207-11.2*Math.min(20,val/100))*Math.PI/180,cx=GX[k],nd=$('nd_'+k);nd.setAttribute('x2',cx+118*Math.cos(a));nd.setAttribute('y2',415-118*Math.sin(a));$('gr_'+k).textContent=S.cb[k].qi?'':Math.round(val)+' LB';}
+  for(const [key,,col] of AN){if(key=='fwFail'){const on=!S[k].fwPos||!S[k].fwCmd,fe=$('an_'+k+key);fe.style.fill=on?'#ff3b30':'#111';fe.setAttribute('filter',on?'url(#gr)':'');for(const q of ['anl_','anr_']){const b=$(q+k);b.setAttribute('opacity',on?1:0);b.setAttribute('filter',on?'url(#gr)':'')}continue}const lit=!!r[key],e=$('an_'+k+key);e.style.fill=lit?(col=='r'?'#ff3b30':'#ffb000'):'#6e6e6e';e.setAttribute('filter',lit?(col=='r'?'url(#gr)':'url(#ga)'):'');}}
+ const xl=c.xfer,xe=$('an_Xxfer');xe.style.fill=xl?'#fff':'#6e6e6e';xe.setAttribute('filter',xl?'url(#gw)':'');
+ const ve=$('an_XxvF');ve.style.fill=c.xvFail?'#ffb000':'#6e6e6e';ve.setAttribute('filter',c.xvFail?'url(#ga)':'');
+ for(const s of SWD){const t=TIP[s.id][s.get()],q=SWP[s.id],l=$('lv_'+s.id),kn=$('lk_'+s.id);l.setAttribute('x2',q.x+t[0]);l.setAttribute('y2',q.y+t[1]);kn.setAttribute('cx',q.x+t[0]);kn.setAttribute('cy',q.y+t[1])}
+ for(const [,k,key] of CBL){const pl=k=='X'?S.cb.tr:S.cb[k][key],c=$('cb_'+k+key);c.style.fill=pl?'#f2f2f2':'#101010';c.style.stroke=pl?'#e8820c':'#999';$('cbt_'+k+key).style.fill=pl?'#101010':'#eee'}
+ for(const id of['bL','bC','bR']){$('bg_'+id).style.fill=S[id]?'var(--fd)':'#d9453d';$('bgt_'+id).style.fill='#fff'}
+ // html
+ $('run').textContent=S.run?'⏸ Pause':'▶ Run';$('run').classList.toggle('on',!!S.run);
+ [...$('spd').children].forEach(b=>b.classList.toggle('on',+b.dataset.v==S.spd));
+ const tot=S.L.M+S.L.A+S.R.M+S.R.A,br=c.L.burn+c.R.burn,tt=Math.floor(S.t);
+ $('stat').textContent=`Time ${Math.floor(tt/3600)}:${String(Math.floor(tt/60)%60).padStart(2,'0')}:${String(tt%60).padStart(2,'0')} · Total ${ft(tot)} lb · Burn ${br} lb/hr`+(br?` · Endurance ${Math.floor(tot/br)}h ${String(Math.round((tot/br%1)*60)).padStart(2,'0')}m`:'');
+ const m=$('msg');m.style.display=note?'':'none';m.textContent=note;
+ document.querySelectorAll('#sc button').forEach(b=>b.classList.toggle('lit',b.dataset.n==hl));
+ syncCt();syncLv();syncIns(c);}
+// controls
+const FL=[['Engine-driven LP pump','lpF','OK','FAILED'],['Engine-driven HP pump','hpF','OK','FAILED'],['Standby pump','stbyF','OK','FAILED'],['Aux tank pump','auxF','OK','FAILED'],['FWD jet pump','fwdF','OK','FAILED'],['AFT jet pump 1','aft1F','OK','FAILED'],['AFT jet pump 2','aft2F','OK','FAILED'],['Aux float valve','flt','OK','STUCK'],['Firewall valve','fwF','OK','STUCK'],['Transfer valve','xvF','OK','STUCK']];
+function ctHtml(){let s='';const R=(l,b)=>s+=`<div class="row"><span class="lbl" style="min-width:150px">${l}</span>${b}</div>`;
+ const b=(t,a,on)=>`<button class="${on?'on':''}" onclick="${a}">${t}</button>`;
+ R('Electrical supply',b('L GEN BUS '+(S.bL?'ON':'OFF'),"gt('bL')",!S.bL)+b('CTR BUS '+(S.bC?'ON':'OFF'),"gt('bC')",!S.bC)+b('R GEN BUS '+(S.bR?'ON':'OFF'),"gt('bR')",!S.bR));
+ R('Engines',SD.map(k=>b(`${k}: ${S[k].eng.toUpperCase()}`,`eng('${k}')`,S[k].eng!='run')).join(''));
+ R('Firewall valve handle',SD.map(k=>b(`${k}: ${S[k].fwCmd?'OPEN':'CLOSED'}`,`fwt('${k}')`,!S[k].fwCmd)).join(''));
+ for(const [l,key,ok,bad] of FL)R(l,SD.map(k=>b(`${k}: ${S[k][key]?bad:ok}`,`tg('${k}','${key}')`,!!S[k][key])).join(''));
+ return s;}
+let lastCt='';function syncCt(){const s=ctHtml();if(s!=lastCt){lastCt=s;$('ct').innerHTML=s}}
+// levels
+const LV=[['L','M','L Main tank (lb)',CAPM],['L','A','L Aux tank (lb)',CAPA],['L','C','L Collector (lb)',CAPC],['R','M','R Main tank (lb)',CAPM],['R','A','R Aux tank (lb)',CAPA],['R','C','R Collector (lb)',CAPC]];
+$('lv').innerHTML=LV.map(([k,t,l,cap])=>`<div class="lv"><span>${l}</span><input type="range" min="0" max="${cap}" step="1" data-k="${k}" data-t="${t}"><input type="number" min="0" max="${cap}" step="1" data-k="${k}" data-t="${t}"></div>`).join('')+'<p class="m" style="margin:4px 0 0">The main tank holds 1621 lb on its own. The collector is separate and holds 53 lb.</p>';
+$('lv').oninput=e=>{const i=e.target;if(!i.dataset.k)return;let v=Math.max(0,Math.min(+i.max,+i.value||0));S[i.dataset.k][i.dataset.t]=v;hl=null;note='';render();};
+function syncLv(){document.querySelectorAll('#lv input').forEach(i=>{if(document.activeElement===i)return;const v=Math.round(S[i.dataset.k][i.dataset.t]);if(i.value!=v)i.value=v;})}
+function pre(w){for(const k of SD){const o=S[k];if(w=='full'){o.M=CAPM;o.A=CAPA;o.C=CAPC}if(w=='half'){o.M=760;o.A=310;o.C=CAPC}if(w=='low'){o.M=330;o.A=0;o.C=CAPC}}hl=null;note='';render();}
+// insights
+let lastIns='';
+function syncIns(c){const a=[];
+ for(const k of SD){const o=S[k],r=c[k],n=NM[k];
+  if(r.flame)a.push([`${n} engine has flamed out: ${o.hpF?'the engine-driven HP pump failed.':!o.fwPos?'the firewall valve is closed.':'the collector is empty.'}`,'w']);
+  else if(r.run)a.push([`${n} engine is running on collector fuel at ${BURN} lb/hr. Feed pressure ${r.psi} psi from ${r.lp&&r.sb?'the engine-driven LP pump and the standby pump':r.lp?'the engine-driven LP pump':'the standby pump only'}.`,'i']);
+  else a.push([`${n} engine is ${o.eng=='start'?'in START (standby pump comes on automatically)':'off'}.`,'i']);
+  if(r.sb&&!r.run&&o.fwPos&&(o.stby||o.eng=='start'))a.push([`${n} standby pump is moving collector fuel to the FCU and back through the return line. The 100 psi valve stays closed, so no fuel reaches the injectors and none is used.`,'i']);
+  if(r.pLow)a.push([`${n} FUEL PRESS LOW: the 10 psi switch sees less than 10 psi. ${r.run&&o.lpF?'The engine-driven LP pump has failed: turn the standby pump on.':(!o.fwPos?'The firewall valve is closed.':'No boost pump is running.')}`,'w']);
+  if(r.auxFlow)a.push([`${n} aux pump is feeding the collector. Aux fuel is used first; main fuel is not used until the aux tank is dry.`,'i']);
+  else if(r.mainFlow)a.push([`${n} collector is being refilled from the main tank by ${r.jp&&r.nj?r.nj+' jet pump'+(r.nj>1?'s':'')+' (motive flow tapped from the feed line after the LP pump) plus the':'only the'} gravity flapper valves.`,r.jp&&r.nj?'i':'w']);
+  if(r.noAux)a.push([`${n} NO AUX XFR: ${WHY.noAux(k)}`,'w']);
+  if(o.aux=='auto'&&!r.auxCmd&&o.A>0.05&&!r.auxRun)a.push([`${n} aux pump is in AUTO but not running: ${o.th?'thermal cutoff tripped.':'the aux tank is empty (float switch).'}`,'i']);
+  if(o.aux!='off'&&!r.bus)a.push([`${n} aux pump has no power (${n} gen bus off or aux pump breaker out).`,'w']);
+  if(r.sbCmd&&(!S.bC||S.cb[k].sb))a.push([`${n} standby pump is called for but it has no power (center bus off or standby pump breaker out).`,'w']);
+  for(const key of Object.keys(CBN))if(key!='tr'&&S.cb[k][key])a.push([`${n} ${CBN[key][0].toLowerCase()} breaker is out: ${CBN[key][1]}.`,'w']);
+  if(r.qLow)a.push([`${n} FUEL QTY LOW: main tank under 324 lb (about 48 minutes).`,'w']);
+  if(r.cLow)a.push([`${n} COL TANK LOW: the collector (full is 53 lb, about 8 minutes) is no longer full.`,'w']);
+  if(r.fwFail)a.push([`${n} FW VALVE: the firewall valve did not reach its commanded position.`,'w']);
+  if(r.xOut)a.push([`Transferring ${n} to ${NM[OT[k]]} at ${XR} lb/hr (8 lb/min) through the cross transfer line. That fuel flows through the ${NM[OT[k]]} engine feed line and FCU and returns to the ${NM[OT[k]]} main tank.`,'i']);}
+ if(c.xvFail)a.push(['XFER VALVE FAIL: a transfer valve did not reach its assigned position.','w']);
+ const d=Math.abs((S.L.M+S.L.A+S.L.C)-(S.R.M+S.R.A+S.R.C));if(d>300)a.push([`Fuel imbalance: ${ft(d)} lb. Set the transfer switch toward the light side.`,'w']);
+ const s=a.map(([t,cl])=>`<li class="${cl}">${t}</li>`).join('');if(s!=lastIns){lastIns=s;$('ins').innerHTML=s}}
+// annunciator reasons + tooltips
+const WHY={
+ pLow:k=>{const o=S[k],r=LC[k];return !o.fwPos&&r.sb?'The firewall valve is closed. The 10 psi switch is downstream of the valve, so it sees no pressure even though the standby pump is running.':r.run&&o.lpF&&!r.sb?'The 10 psi switch lost pressure: the engine-driven low pressure pump has failed or is failing.':!r.run&&!r.sb?'No boost pressure: the engine is not running and the standby pump is not running.':'The 10 psi switch is not seeing pressure.'},
+ qLow:k=>'Main tank sensor: less than 324 lb (about 48 minutes at 400 lb/hr).',
+ cLow:k=>'Collector tank sensor: the collector (53 lb, about 8 minutes at 400 lb/hr when full) is no longer full, so fuel is not keeping up with what the engine uses.',
+ noAux:k=>{const o=S[k],r=LC[k];return o.auxF?'Aux pump is commanded to run but there is no pressure at the 5 psi switch: the pump has failed.':o.th?'The pump thermal cutoff tripped after running in a dry tank. Cycle the switch OFF to reset.':o.A<=0.05?(o.aux=='on'?'Switch ON: the aux tank has pumped dry (or the pump has failed).':'Switch AUTO: the tank is dry but the float valve is stuck (or the pump has failed).'):'Pump commanded to run but no pressure at the 5 psi switch.'},
+ fwFail:k=>'The firewall valve did not reach its commanded position within 2 seconds.',
+ xfer:k=>'Tank-to-tank transfer: lit only with the transfer valve fully open. Rate 8 lb/min (480 lb/hr).',
+ xvF:k=>'A transfer valve failed to reach its assigned position within 2 seconds.'};
+function tipFor(key){const p=key.split(':');
+ if(p[0]=='a'&&p[2]=='fwFail'){const o=S[p[1]];return (!o.fwPos||!o.fwCmd)?(LC[p[1]].fwFail?WHY.fwFail(p[1])+' ':'')+'Firewall valve closed: no fuel reaches the engine. Click to open it.':'Firewall valve open. Click this annunciator to close the valve (the edges and words glow red while it is closed).';}
+ if(p[0]=='a'){const lit=p[1]=='X'?(p[2]=='xfer'?LC.xfer:LC.xvFail):LC[p[1]][p[2]];return lit?WHY[p[2]](p[1]):'';}
+ const k=p[1],o=S[k]||{},r=LC&&LC[k]||{};
+ const st=(on,bad)=>bad?'FAILED.':on?'Running.':'Not running.';
+ if(p[0]=='p'){const m={
+  lp:`Engine-driven low pressure pump, 45 psi. ${st(r.lp,o.lpF)} Runs with the engine. The motive line for the jet pumps taps the feed line after this pump, so the standby pump supplies it too. Click to fail or restore.`,
+  hp:`Engine-driven high pressure pump, 850 psi. ${st(r.run,o.hpF)} If it fails the engine stops. Click to fail or restore.`,
+  sb:`Standby boost pump, 11 psi ±2, powered by the center bus. ${st(r.sb,o.stbyF)} Comes on with the standby switch ON, transfer flow selected from this side, or engine START. Click to fail or restore.`,
+  ax:`Aux tank pump, 11 psi ±2, powered by the ${k} gen bus. ${st(r.auxRun,o.auxF)} AUTO keeps the pump running, even with no LP or standby pump running, and cuts off only when the float senses the tank empty or the pump overheats dry. Click to fail or restore.`,
+  aj1:`Aft jet pump (in the collector), motive flow tapped from the feed line after the LP pump (LP or standby pump). ${st(r.jp,o.aft1F)} Moves main tank fuel into the collector. Click to fail or restore.`,
+  aj2:`Aft jet pump (in the collector), motive flow tapped from the feed line after the LP pump (LP or standby pump). ${st(r.jp,o.aft2F)} Moves main tank fuel into the collector. Click to fail or restore.`,
+  fj:`Forward jet pump (in the main tank), motive flow tapped from the feed line after the LP pump (LP or standby pump). ${st(r.jp,o.fwdF)} Moves main tank fuel into the collector. Click to fail or restore.`};return m[p[2]];}
+ if(p[0]=='v')return `Firewall fuel shutoff valve: ${o.fwPos?'open':'closed'}. Click to ${o.fwCmd?'close':'open'} it (fire handle). Closing it stops the engine.`;
+ if(p[0]=='x')return `Transfer valve: ${o.xvPos?'open':'closed'}. Opens on the supplying (opposite) side when transfer flow is selected. Click to stick it where it is (or free it).`;
+ if(p[0]=='f')return `Aux tank float valve: ${o.flt?'STUCK (thinks the tank has fuel)':'working'}. Click to stick or free it.`;
+ if(p[0]=='eng')return 'Click to cycle OFF, START, RUN. START turns the standby pump on.';
+ if(p[0]=='w')return 'Shared wall between the collector and the main tank: 3 gravity flapper valves (green) let main fuel flow into the collector, and 3 top divider slosh cuts (gaps) keep fuel from sloshing out of it. The collector provides air-free fuel to the engine.';
+ if(p[0]=='pv')return '100 psi minimum pressure valve between the FCU and the injectors. It opens only when the engine-driven HP pump is driving (850 psi). With the engine not running, fuel from the standby pump or a transfer stops at the FCU and goes back through the return line.';
+ if(p[0]=='vt')return {naca:'NACA air scoop. Part of the fuel vent system: lets ram air in so the tank vents stay equalized. Vent lines (yellow) only equalize pressure when fuel is drained, changed or when altitude changes. No fuel flow is modeled.',ram:'Heated ram vent. Fuel vent system, heated to prevent icing. Equalizes tank pressure; no fuel flow modeled.',flush:'Flush vent with flame arrestor. Fuel vent system outlet at the wing tip. Equalizes tank pressure; no fuel flow modeled.',relief:'Pressure relief tube. Vents excess tank pressure overboard. Equalizes pressure only; no fuel flow modeled.',fv:'Fuel vent float valve. Closes the vent line if fuel reaches it so liquid fuel does not leave through the vents. Static: no flow modeled.',mfill:'Main tank filler port (gravity fill). Not modeled: set tank levels in the FUEL LEVELS card.',afill:'Aux tank filler port (gravity fill). Not modeled: set tank levels in the FUEL LEVELS card.',probe:'Main tank fuel probe (quantity sensing). Drawn for reference; the quantity gauge reads the main and aux tanks.',cprobe:'Collector tank optical fuel sensor. It controls the COL TANK LOW annunciator.',msens:'Main tank optical fuel sensor. It controls the FUEL QTY LOW annunciator.'}[p[1]];
+ if(p[0]=='ps')return '10 psi pressure switch, on the motive flow line that taps the feed line after the LP pump. Below 10 psi: FUEL PRESS LOW.';
+ if(p[0]=='s5')return '5 psi pressure switch on the aux line. No pressure with the pump commanded to run: NO AUX XFR.';
+ if(p[0]=='b')return {bL:'Left generator bus: powers the left aux tank pump. Click to remove power.',bC:'Center bus: powers both standby pumps. Click to remove power.',bR:'Right generator bus: powers the right aux tank pump. Click to remove power.'}[p[1]];
+ if(p[0]=='g'){const v=S.cb[k].qi?0:(S.qs=='MAIN'?S[k].M:S[k].A);return `${NM[k]} fuel quantity gauge (${S.qs} tank): ${Math.round(v)} lb. MAIN shows the main tank, AUX shows the aux tank. Yellow arc below 363 lb: no takeoff.`}
+ if(p[0]=='cb'){const key=p[2],pl=key=='tr'?S.cb.tr:S.cb[k][key];return `${k=='X'?'':NM[k]+' '}${CBN[key][0]} circuit breaker: ${pl?'OUT (pulled).':'in.'} When pulled, ${CBN[key][1]}. Click to pull or reset.`}
+ if(p[0]=='sw')return {sL:'Left standby pump switch. ON runs the pump.',sR:'Right standby pump switch. ON runs the pump.',aL:'Left aux pump: ON runs until dry, AUTO has cutoffs, OFF.',aR:'Right aux pump: ON runs until dry, AUTO has cutoffs, OFF.',xf:'Transfer flow: choose the receiving side. R runs the left standby pump and opens the left transfer valve, moving left fuel into the right wing (and L does the reverse).',qs:'Selects what the quantity gauges show.'}[p[1]];
+ return '';}
+const tip=$('tip');let tt;
+function showTip(ev,t){if(!t){tip.style.display='none';return}tip.textContent=t;tip.style.display='block';tip.style.left=Math.max(4,Math.min(ev.clientX+14,innerWidth-290))+'px';tip.style.top=Math.min(ev.clientY+16,innerHeight-90)+'px';}
+$('svg').addEventListener('mousemove',e=>{const t=e.target.closest('[data-tip]');showTip(e,t?tipFor(t.dataset.tip):'')});
+$('svg').addEventListener('mouseleave',()=>tip.style.display='none');
+// actions
+function chg(){hl=null;note='';render();}
+function tg(k,key){S[k][key]^=1;chg();}
+function gt(key){S[key]^=1;chg();}
+function eng(k){const o=S[k];o.eng={off:'start',start:'run',run:'off'}[o.eng];chg();}
+function fwt(k){S[k].fwCmd^=1;chg();}
+$('svg').addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t){const p=t.dataset.act.split(':');
+ if(p[0]=='tg')tg(p[1],p[2]);else if(p[0]=='eng')eng(p[1]);else if(p[0]=='fw')fwt(p[1]);else if(p[0]=='bus')gt(p[1]);
+ else if(p[0]=='cb'){if(p[2]=='tr')S.cb.tr^=1;else S.cb[p[1]][p[2]]^=1;chg();}
+ else if(p[0]=='sw'){SWD.find(s=>s.id==p[1]).set(+p[2]);chg();}
+ return;}
+ const a=e.target.closest('[data-tip]');if(a&&a.dataset.tip.startsWith('a:')){showTip(e,tipFor(a.dataset.tip));clearTimeout(tt);tt=setTimeout(()=>tip.style.display='none',4000)}});
+// sim controls
+$('spd').innerHTML=[1,60,300,1200].map(v=>`<button data-v="${v}">${v}×</button>`).join('');
+$('spd').onclick=e=>{const b=e.target.closest('button');if(b){S.spd=+b.dataset.v;render()}};
+$('run').onclick=()=>{S.run^=1;render()};
+setInterval(()=>{if(S.run){adv(S,0.1*S.spd);render()}},100);
+// scenarios
+const SCN=[
+ ['Normal Operation',s=>{}],
+ ['Cold And Dark',s=>{s.L.eng=s.R.eng='off';s.L.aux=s.R.aux='off'}],
+ ['Left Engine Start',s=>{s.L.eng='start';s.R.eng='off';s.L.aux=s.R.aux='off'}],
+ ['Aux Pump Dry Switch On',s=>{s.L.A=0;s.L.aux='on'}],
+ ['Aux Float Valve Stuck',s=>{s.L.A=0;s.L.flt=1}],
+ ['Left Aux Pump Failed',s=>{s.L.auxF=1;s.L.aux='on'}],
+ ['Left Aux Pump Breaker Out',s=>{s.cb.L.ax=1;s.L.aux='on'},'The aux pump has no power, so nothing runs and there is no NO AUX XFR light.'],
+ ['Left Gen Bus Lost',s=>{s.bL=0},'Aux fuel is not pumped without gen bus power; the collector is fed from the main tank instead.'],
+ ['Center Bus Lost',s=>{s.bC=0;s.L.stby=1}],
+ ['Left LP Pump Failed',s=>{s.L.lpF=1}],
+ ['Left LP Pump Failed Standby On',s=>{s.L.lpF=1;s.L.stby=1}],
+ ['Left Jet Pumps Failed',s=>{s.L.fwdF=s.L.aft1F=s.L.aft2F=1},'Press Run: the flapper valves alone still keep the collector full.'],
+ ['Left HP Pump Failed',s=>{s.L.hpF=1}],
+ ['Left Firewall Valve Closed',s=>{s.L.fwCmd=0}],
+ ['Left Firewall Valve Fail',s=>{s.L.fwCmd=0;s.L.fwPos=1;s.L.fwF=1}],
+ ['Cross Transfer L To R',s=>{s.L.M=1400;s.R.M=500;s.xf='R'},'Transfer switch at R: the left standby pump moves fuel into the right wing at 8 lb/min. Press Run to watch.'],
+ ['Transfer Valve Fail',s=>{s.xf='R';s.L.xvF=1}],
+ ['Transfer Valve Stuck Open',s=>{s.L.xvPos=1;s.L.xvF=1}],
+ ['Fuel Imbalance',s=>{s.L.M=1400;s.R.M=500;s.L.A=500;s.R.A=100}],
+ ['Low Main Tank',s=>{s.L.M=250;s.L.A=0}],
+ ['Last Minutes Of Fuel',s=>{s.L.M=0;s.L.A=0;s.L.C=20},'Press Run (300×) and watch the collector empty and the engine flame out.']];
+$('sc').innerHTML=SCN.map(([n],i)=>`<button data-n="${n}" data-i="${i}">${n}</button>`).join('');
+$('sc').onclick=e=>{const b=e.target.closest('button');if(!b)return;const [n,fn,nt]=SCN[+b.dataset.i],r=S.run,sp=S.spd;S=mk();S.run=r;S.spd=sp;fn(S);hl=n;note=nt||'';render();};
+document.querySelectorAll('.ch').forEach(hd=>{const t=()=>{const o=hd.parentElement.classList.toggle('open');hd.setAttribute('aria-expanded',o)};hd.onclick=t;hd.onkeydown=e=>{if(e.key=='Enter'||e.key==' '){e.preventDefault();t()}}});
+/*ZOOM*/
+render();
+</script></body></html>
